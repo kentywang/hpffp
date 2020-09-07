@@ -1,0 +1,17 @@
+-- Notice the difference in expansion between foldr and foldl.
+-- Thus something like:
+-- foldr const 0 [1..5]
+-- doesn't traverse the entire spine, but something like:
+-- foldl const 0 [1..5]
+-- still has to. I think.
+-- Also, it looks like foldl is tail call recursive.
+
+foldl f (f [] 1) [2,3]
+foldl f (f (f [] 1) 2) [3]
+foldl f (f (f (f [] 1) 2) 3) []
+(f (f (f [] 1) 2) 3) 
+
+f 1 (foldr f z [2,3])
+f 1 (f 2 (foldr f z [3]))
+f 1 (f 2 (f 3 (foldr f z [])))
+f 1 (f 2 (f 3 []))
