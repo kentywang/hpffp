@@ -1,6 +1,6 @@
 module Cipher where
 
-import Data.Char
+import Data.Char ( ord, chr )
 
 main :: IO ()
 main = do
