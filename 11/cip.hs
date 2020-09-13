@@ -1,9 +1,13 @@
 import Data.Char ( ord, chr )
+import System.IO ( stdout, hSetBuffering, BufferMode(NoBuffering) )
 
 main :: IO ()
 main = do
-  print $ vigenere "ALLY"
-                   "MEET AT DAWN"
+  hSetBuffering stdout NoBuffering
+  putStr "Enter message: "
+  getLine >>= printMessage . vigenere "ALLY"
+  where printMessage =
+          putStrLn . ("The Vigenere code is: " ++)
 
 vigenere :: String -> String -> String
 vigenere "" _ = error "No keyword provided"
