@@ -9,13 +9,16 @@ sumToN :: (Eq a, Num a) => a -> a
 sumToN 0 = 0
 sumToN n = n + sumToN (n - 1)
 
-mult :: (Integral a) => a -> a -> a
-mult x y = go x y
-  where go sum count
-          | count == 0 = 0
-          | count == 1 = sum
-          | otherwise  =
-              go (sum + x) (count - 1)
+mult :: (Eq a, Num a, Ord a) => a -> a -> a
+mult _ 0 = 0
+mult 0 _ = 0
+mult x y = go 0 y
+  where go sm ct
+          | ct == 0 = sm
+          | ct < 0 =
+              go (sm - x) (ct + 1)
+          | otherwise =
+              go (sm + x) (ct - 1)
 
 dividedBy :: Integral a => a -> a -> (a, a)
 dividedBy num denom = go num denom 0

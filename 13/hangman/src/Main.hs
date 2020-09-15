@@ -1,6 +1,7 @@
 -- src/Main.hs
 module Main where
 
+import Test.Hspec
 import Control.Monad (forever)
 import Data.Char (toUpper, toLower)
 import Data.Maybe (isJust)
@@ -53,6 +54,7 @@ data Puzzle =  -- KW: Made into record syntax and added new field.
          , discovered :: [Maybe Char]
          , guessed :: [Char]
          , chancesLeft :: Int }
+         deriving Eq
 
 instance Show Puzzle where
   show (Puzzle _ discovered guessed chancesLeft) =
@@ -126,7 +128,7 @@ gameOver (Puzzle wordToGuess _ guessed chancesLeft) =
   else return ()
 
 gameWin :: Puzzle -> IO ()
-gameWin (Puzzle _ filledInSoFar _ _) =
+gameWin (Puzzle wordToGuess filledInSoFar _ _) =
   if all isJust filledInSoFar then
     do putStrLn "You win!"
        putStrLn $
@@ -155,3 +157,54 @@ main = do
   let puzzle =
         freshPuzzle (fmap toLower word)
   runGame puzzle
+
+test :: IO ()
+test = hspec $ do
+  describe "fillInCharacter" $ do
+    it "adds char to discovered and guessed" $ do
+      let p = Puzzle { puzzle = "cat"
+                       , discovered = [Nothing, Nothing, Nothing]
+                       , guessed = []
+                       , chancesLeft = 3 }
+          q = Puzzle { puzzle = "cat"
+                      , discovered = [Just 'c', Nothing, Nothing]
+                      , guessed = "c"
+                      , chancesLeft = 3 }
+      fillInCharacter p 'c' `shouldBe` q
+    it "updates chancesLeft and guessed" $ do
+      let p = Puzzle { puzzle = "cat"
+                       , discovered = [Nothing, Nothing, Nothing]
+                       , guessed = []
+                       , chancesLeft = 3 }
+          q = Puzzle { puzzle = "cat"
+                      , discovered = [Nothing, Nothing, Nothing]
+                      , guessed = "b"
+                      , chancesLeft = 2 }
+      fillInCharacter p 'b' `shouldBe` q
+  describe "handleGuess" $ do
+    it "doesn't change puzzle if already guessed" $ do
+      let p = Puzzle { puzzle = "cat"
+                    , discovered = [Nothing, Nothing, Nothing]
+                    , guessed = "c"
+                    , chancesLeft = 3 }
+      handleGuess p 'c' >>= shouldBe p
+    it "updates puzzle when char is right" $ do
+      let p = Puzzle { puzzle = "cat"
+                       , discovered = [Nothing, Nothing, Nothing]
+                       , guessed = []
+                       , chancesLeft = 3 }
+          q = Puzzle { puzzle = "cat"
+                       , discovered = [Just 'c', Nothing, Nothing]
+                       , guessed = "c"
+                       , chancesLeft = 3 }
+      handleGuess p 'c' >>= shouldBe q
+    it "updates puzzle when char is wrong" $ do
+      let p = Puzzle { puzzle = "cat"
+                      , discovered = [Nothing, Nothing, Nothing]
+                      , guessed = []
+                      , chancesLeft = 3 }
+          q = Puzzle { puzzle = "cat"
+                      , discovered = [Nothing, Nothing, Nothing]
+                      , guessed = "b"
+                      , chancesLeft = 2 }
+      handleGuess p 'b' >>= shouldBe q
