@@ -87,6 +87,18 @@ instance Foldable (Four' a) where
   foldMap :: (Monoid m) => (b -> m) -> Four' a b -> m
   foldMap f (Four' _ b b' b'') = f b <> f b' <> f b''
 
+-- Last problem
+filterF :: ( Applicative f
+           , Foldable t
+           , Monoid (f a))
+        => (a -> Bool) -> t a -> f a
+filterF pred = foldMap $ \a ->
+                if pred a
+                then pure a
+                else mempty
+                -- pure a works for folding because function's constaint
+                -- on Applicative f means f a is a Monoid.
+
 main :: IO ()
 main = do
   let ce1 :: Constant Bool (String, String, String, Sum Int, All)
