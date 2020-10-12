@@ -157,8 +157,7 @@ instance Monad (Moi s) where
   (>>=) :: Moi s a -> (a -> Moi s b) -> Moi s b
   Moi f >>= g = Moi $ \s ->
     let (a, s') = f s
-        (b, s'') = runMoi (g a) s'
-    in (b, s'')
+    in runMoi (g a) s'
 
 main = do
   let trigger :: Moi Int (Int, Int, [Int])
