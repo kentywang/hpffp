@@ -1,0 +1,71 @@
+name:                bench
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/githubuser/bench#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2020 Author name here
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+-- executable bench
+--   hs-source-dirs:      src
+--   main-is:             Main.hs
+--   default-language:    Haskell2010
+--   build-depends:       base >= 4.7 && < 5
+--                      , criterion
+
+-- executable bench2
+--   hs-source-dirs:      src
+--   main-is:             MapVsList.hs
+--   default-language:    Haskell2010
+--   build-depends:       base >= 4.7 && < 5
+--                      , criterion
+--                      , containers
+
+-- executable bench3
+--   hs-source-dirs:      src
+--   main-is:             MapVsSet.hs
+--   default-language:    Haskell2010
+--   build-depends:       base >= 4.7 && < 5
+--                      , criterion
+--                      , containers
+
+-- executable bench4
+--   hs-source-dirs:      src
+--   main-is:             VectorTest.hs
+--   default-language:    Haskell2010
+--   build-depends:       base >= 4.7 && < 5
+--                      , criterion
+--                      , vector
+
+-- executable bench5
+--   hs-source-dirs:      src
+--   main-is:             Bytestring.hs
+--   default-language:    Haskell2010
+--   build-depends:       base >= 4.7 && < 5
+--                      , zlib
+--                      , bytestring
+--                      , text
+--                      , utf8-string
+
+-- executable bench6
+--   hs-source-dirs:      src
+--   main-is:             dlist.hs
+--   default-language:    Haskell2010
+--   build-depends:       base >= 4.7 && < 5
+--                      , criterion
+--                      , dlist
+
+executable bench7
+  hs-source-dirs:      src
+  main-is:             queue.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , criterion
+                     , containers
