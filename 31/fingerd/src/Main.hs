@@ -4,6 +4,8 @@
 
 module Main where
 
+import           Control.Concurrent (forkIO, newMVar, putMVar, takeMVar
+                                   , MVar)
 import           Control.Exception
 import           Control.Monad (forever)
 import           Data.ByteString (ByteString)
@@ -128,16 +130,47 @@ handleQuery dbConn soc = do
     "\r\n" -> returnUsers dbConn soc
     name   -> returnUser dbConn soc (decodeUtf8 name)
 
-handleQueries :: Connection -> Socket -> IO ()
-handleQueries dbConn sock = forever
+handleQueries :: Connection -> Socket -> MVar () -> IO ()
+handleQueries dbConn sock m = forever
   $ do
     (soc, _) <- accept sock
     putStrLn "Got connection, handling query"
+    takeMVar m
     handleQuery dbConn soc
+    putMVar m ()
     Network.Socket.close soc
 
-main :: IO ()
-main = withSocketsDo
+makeUserRow :: [Text] -> UserRow
+makeUserRow [a, b, c, d, e] = (Null, a, b, c, d, e)
+
+-- No check for if user already exists, yolo
+insertUserToDb :: Connection -> Socket -> [Text] -> IO ()
+insertUserToDb dbConn soc userFields = do
+  let (username:_) = userFields
+      userRow = makeUserRow userFields
+  execute dbConn insertUser userRow
+  [user] <- query dbConn getUserQuery $ Only username -- the username
+  sendAll soc (formatUser user)
+
+handleInsert :: Connection -> Socket -> IO ()
+handleInsert dbConn soc = do
+  msg <- recv soc 1024
+  insertUserToDb dbConn soc $ format msg -- no validation for insert request, yolo
+  where
+    format = T.words . T.strip . decodeUtf8
+
+handleInserts :: Connection -> Socket -> MVar () -> IO ()
+handleInserts dbConn sock m = forever
+  $ do
+    (soc, _) <- accept sock
+    putStrLn "Got connection, handling insert"
+    takeMVar m
+    handleInsert dbConn soc
+    putMVar m ()
+    Network.Socket.close soc
+
+fingerService :: MVar () -> IO ()
+fingerService m = withSocketsDo
   $ do
     addrinfos <- getAddrInfo
       (Just (defaultHints { addrFlags = [AI_PASSIVE] }))
@@ -149,6 +182,32 @@ main = withSocketsDo
     listen sock 1
     -- only one connection open at a time 
     conn <- open "finger.db"
-    handleQueries conn sock
+    handleQueries conn sock m
     SQLite.close conn
     Network.Socket.close sock
+
+-- Listen to some other socket. If it receives a request, update the DB.
+dbInsertService :: MVar () -> IO ()
+dbInsertService m = withSocketsDo
+  $ do
+    addrinfos <- getAddrInfo
+      (Just (defaultHints { addrFlags = [AI_PASSIVE] }))
+      Nothing
+      (Just "80")
+    let serveraddr = head addrinfos
+    sock <- socket (addrFamily serveraddr) Stream defaultProtocol
+    Network.Socket.bind sock (addrAddress serveraddr)
+    listen sock 1
+    -- only one connection open at a time 
+    conn <- open "finger.db"
+    handleInserts conn sock m
+    SQLite.close conn
+    Network.Socket.close sock
+
+-- Technically we don't need MVar for this, since our shared mutable state is the db file
+-- itself. But we can use MVar to act as a lock on when threads can run/not run.
+main :: IO ()
+main = do
+  m <- newMVar ()
+  forkIO $ dbInsertService m
+  fingerService m
